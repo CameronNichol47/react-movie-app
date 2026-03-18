@@ -23,6 +23,12 @@ function App() {
       }
     }
 
+  async function fetchMovieDetails(imdbID: string) {
+    const res = await fetch(`https://www.omdbapi.com/?i=${imdbID}&apikey=${import.meta.env.VITE_API_KEY}`);
+    const data = await res.json();
+    console.log(data);
+  }
+
   useEffect(() => {
     fetchMovies(searchTerm);
   }, []);
@@ -66,13 +72,28 @@ function App() {
       </form>
       {films}
 
-      <h2>My Selections ({selectedMovies.length}/12)</h2>
-      {selectedMovies.map((movie) => (
+     <h2>My Selections ({selectedMovies.length}/12)</h2>
+     {selectedMovies.map((movie) => (
         <div key={movie.imdbID} style={{ marginBottom: "20px" }}>
-          <p>{movie.Title} ({movie.Year})</p>
-          <img src={movie.Poster} alt={movie.Title} width="100" />
+        <p>{movie.Title} ({movie.Year})</p>
+        <img src={movie.Poster} alt={movie.Title} width="100" />
+        <div>
+          <button
+            onClick={() =>
+              setSelectedMovies((prev) =>
+              prev.filter((m) => m.imdbID !== movie.imdbID)
+              )
+            }
+          >
+            Remove
+          </button>
         </div>
-      ))}
+        </div>
+    ))}
+    <button 
+      onClick={() => selectedMovies.forEach((m) => fetchMovieDetails(m.imdbID))}>
+      Find Details For All Selected
+    </button>
     </div>
   );
 }
@@ -87,7 +108,6 @@ function Movie(props: { title: string; year: number; poster: string; onSelect: (
     </div>
     <div>
       <button onClick={props.onSelect} style={{marginBottom: "30px"}}>Choose</button>
-
     </div>
   </div>
   );
