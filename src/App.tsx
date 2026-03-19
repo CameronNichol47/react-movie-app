@@ -26,7 +26,7 @@ function App() {
   async function fetchMovieDetails(imdbID: string) {
     const res = await fetch(`https://www.omdbapi.com/?i=${imdbID}&apikey=${import.meta.env.VITE_API_KEY}`);
     const data = await res.json();
-    console.log(data);
+    return data;
   }
 
   useEffect(() => {
@@ -39,7 +39,52 @@ function App() {
     fetchMovies(searchTerm);
   }
 
+
+async function handleFindAndSend() {
+  console.log("PAGE ORIGIN:", window.location.origin);
+  try {
+    console.log("BUTTON CLICKED");
+    console.log("SELECTED MOVIES:", selectedMovies);
+
+    if (selectedMovies.length === 0) {
+      console.log("No selected movies");
+      return;
+    }
+
+    const details = await Promise.all(
+      selectedMovies.map((m) => fetchMovieDetails(m.imdbID))
+    );
+
+    console.log("DETAILS:", details);
+
+    const res = await fetch("http://127.0.0.1:5000/recommend", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      selectedMovies: details,
+    }),
+  });
+
+    console.log("FETCH STATUS:", res.status);
+
+    const data = await res.json();
+    console.log("BACKEND RESPONSE:", data);
+  } catch (error) {
+    console.error("ERROR IN handleFindAndSend:", error);
+  }
+}
   
+async function testBackend() {
+  try {
+    const res = await fetch("http://127.0.0.1:5000/test");
+    const data = await res.json();
+    console.log("TEST BACKEND:", data);
+  } catch (error) {
+    console.error("TEST ERROR:", error);
+  }
+}
 
   const films = movies.map((movie) => 
     (<Movie 
@@ -91,9 +136,10 @@ function App() {
         </div>
     ))}
     <button 
-      onClick={() => selectedMovies.forEach((m) => fetchMovieDetails(m.imdbID))}>
+      onClick={handleFindAndSend}>
       Find Details For All Selected
     </button>
+    <button onClick={testBackend}>Test Backend</button>
     </div>
   );
 }
@@ -112,5 +158,6 @@ function Movie(props: { title: string; year: number; poster: string; onSelect: (
   </div>
   );
 }
+
 
 export default App;
